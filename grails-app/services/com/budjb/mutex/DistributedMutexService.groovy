@@ -95,13 +95,13 @@ class DistributedMutexService {
                     // Find the existing mutex
                     DistributedMutex mutex = DistributedMutex.findByKeyValue(key)
 
-                    // If the mutex wasn't found, create one
+                    // If the mutex wasn't found, create one. Otherwise, force a refresh.
                     if (!mutex) {
                         mutex = new DistributedMutex(keyValue: key)
                     }
-
-                    // Force a refresh
-                    mutex.refresh()
+                    else {
+                        mutex.refresh()
+                    }
 
                     // If the mutex is locked, we're done
                     if (mutex.locked) {
