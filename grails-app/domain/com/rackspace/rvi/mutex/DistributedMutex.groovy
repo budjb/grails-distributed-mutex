@@ -32,10 +32,16 @@ class DistributedMutex {
     Date lastUpdated
 
     /**
+     * Expiration timestamp.
+     */
+    Date expires
+
+    /**
      * Field constraints.
      */
     static constraints = {
         keyValue unique: true, nullable: false, blank: false
         lastUpdated nullable: true
+        expires nullable: true
     }
 }
