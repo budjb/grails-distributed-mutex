@@ -170,7 +170,7 @@ class DistributedMutexService {
                     Date expires = null
                     if (mutexTimeout > 0) {
                         use(TimeCategory) {
-                            expires = new Date() + expires.milliseconds
+                            expires = new Date() + (mutexTimeout as int).milliseconds
                         }
                     }
 

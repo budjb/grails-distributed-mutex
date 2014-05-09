@@ -17,7 +17,7 @@ class DistributedMutexGrailsPlugin {
     /**
      * Plugin version.
      */
-    def version = "0.2.1"
+    def version = "0.2.2"
 
     /**
      * Grails version requirement.
