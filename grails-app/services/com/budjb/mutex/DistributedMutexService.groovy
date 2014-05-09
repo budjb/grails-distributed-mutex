@@ -17,8 +17,9 @@ package com.budjb.mutex
 
 import org.apache.log4j.Logger
 
+import com.budjb.mutex.DistributedMutex
 import com.budjb.mutex.DistributedMutexService
-import com.rackspace.rvi.mutex.DistributedMutex
+
 import groovy.time.TimeCategory
 
 class DistributedMutexService {
@@ -33,12 +34,12 @@ class DistributedMutexService {
     public static int DEFAULT_POLL_INTERVAL = 500
 
     /**
-     * Default timeout to wait for a lock acquisition before giving up.
+     * Default timeout (in milliseconds) to wait for a lock acquisition before giving up.
      */
     public static int DEFAULT_POLL_TIMEOUT = 0
 
     /**
-     * Default mutex timeout.
+     * Default mutex timeout (in milliseconds).
      */
     public static int DEFAULT_MUTEX_TIMEOUT = 0
 
@@ -169,7 +170,7 @@ class DistributedMutexService {
                     Date expires = null
                     if (mutexTimeout > 0) {
                         use(TimeCategory) {
-                            expires = new Date() + expires.seconds
+                            expires = new Date() + expires.milliseconds
                         }
                     }
 
