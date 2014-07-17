@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import com.budjb.mutex.DistributedMutexHelper
+
 class DistributedMutexGrailsPlugin {
     /**
      * Plugin version.
      */
-    def version = "0.2.2"
+    def version = "0.2.3"
 
     /**
      * Grails version requirement.
@@ -76,4 +78,14 @@ to serialize parallel processes acting on the same resources.
      * Online location of the plugin's browseable source code.
      */
     def scm = [url: 'https://github.com/budjb/grails-distributed-mutex']
+
+    /**
+     * Spring bean configuration.
+     */
+    def doWithSpring = {
+        "distributedMutexHelper"(DistributedMutexHelper) { bean ->
+            bean.scope = 'singleton'
+            bean.autowire = true
+        }
+    }
 }

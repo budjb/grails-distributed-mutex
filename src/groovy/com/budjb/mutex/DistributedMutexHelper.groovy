@@ -16,18 +16,11 @@
 package com.budjb.mutex
 
 import org.apache.log4j.Logger
-
-import com.budjb.mutex.DistributedMutex
-import com.budjb.mutex.DistributedMutexService
-
+import org.hibernate.StaleObjectStateException
+import org.springframework.dao.OptimisticLockingFailureException
 import groovy.time.TimeCategory
 
-class DistributedMutexService {
-    /**
-     * Disable transactional behavior.
-     */
-    static transactional = false
-
+class DistributedMutexHelper {
     /**
      * Default poll interval (in milliseconds).
      */
@@ -46,7 +39,7 @@ class DistributedMutexService {
     /**
      * Logger.
      */
-    Logger log = Logger.getLogger(DistributedMutexService)
+    Logger log = Logger.getLogger(DistributedMutexHelper)
 
     /**
      * Determines if a mutex key is currently locked.
@@ -56,7 +49,10 @@ class DistributedMutexService {
      */
     boolean isMutexLocked(String key) {
         // Load the mutex
-        DistributedMutex mutex = DistributedMutex.findByKeyValue(key)
+        DistributedMutex mutex
+        DistributedMutex.withNewSession {
+            mutex = DistributedMutex.findByKeyValue(key)
+        }
 
         // If there is no existing mutex, it cannot be locked
         if (!mutex) {
@@ -188,8 +184,14 @@ class DistributedMutexService {
                     return true
                 }
             }
+            catch (OptimisticLockingFailureException e) {
+                log.warn("OptimisticLockingFailureException caught while attempting to acquire lock; will automatically retry if the acquire timeout has not expired")
+            }
+            catch (StaleObjectStateException e) {
+                log.warn("StaleObjectStateException caught while attempting to acquire lock; will automatically retry if the acquire timeout has not expired")
+            }
             catch (Exception e) {
-                log.debug("exception caught while attempting to acquire lock; will automatically retry if the acquire timeout has not expired", e)
+                log.warn("unexpected exception '${e.class}' caught while attempting to acquire lock; will automatically retry if the acquire timeout has not expired", e)
             }
 
             // If timeout is 0, just stop at one try
