@@ -42,16 +42,16 @@ class DistributedMutexHelper {
     Logger log = Logger.getLogger(DistributedMutexHelper)
 
     /**
-     * Determines if a mutex key is currently locked.
+     * Determines if a mutex is currently locked.
      *
-     * @param key
+     * @param identifier
      * @return
      */
-    boolean isMutexLocked(String key) {
+    boolean isMutexLocked(String identifier) {
         // Load the mutex
         DistributedMutex mutex
         DistributedMutex.withNewSession {
-            mutex = DistributedMutex.findByKeyValue(key)
+            mutex = DistributedMutex.findByIdentifier(identifier)
         }
 
         // If there is no existing mutex, it cannot be locked
@@ -63,7 +63,7 @@ class DistributedMutexHelper {
     }
 
     /**
-     * Determines if a mutex key is currently locked.
+     * Determines if a mutex is currently locked.
      *
      * @param mutex
      * @return
@@ -88,50 +88,53 @@ class DistributedMutexHelper {
     }
 
     /**
-     * Attempts to acquire a mutex lock for a given key.
+     * Attempts to acquire a mutex lock for a given identifier.
      *
-     * @param key Key value that identifies the mutex.
+     * @param identifier Identity of the mutex.
      * @return
      */
-    boolean acquireMutexLock(String key) {
-        return acquireMutexLock(key, DEFAULT_MUTEX_TIMEOUT)
+    boolean acquireMutexLock(String indentifier) {
+        return acquireMutexLock(indentifier, DEFAULT_MUTEX_TIMEOUT)
     }
 
     /**
-     * Attempts to acquire a mutex lock for a given key.
+     * Attempts to acquire a mutex lock for a given identifier.
      *
-     * @param key Key value that identifies the mutex.
+     * @param identifier Identity of the mutex.
      * @param mutexTimeout Amount of time the mutex lock is valid until it can be reacquired.
      * @return
      */
-    boolean acquireMutexLock(String key, long mutexTimeout) {
-        return acquireMutexLock(key, mutexTimeout, DEFAULT_POLL_TIMEOUT)
+    boolean acquireMutexLock(String identifier, long mutexTimeout) {
+        return acquireMutexLock(identifier, mutexTimeout, DEFAULT_POLL_TIMEOUT)
     }
 
     /**
-     * Attempts to acquire a mutex lock for a given key.
+     * Attempts to acquire a mutex lock for a given identifier.
      *
-     * @param key Key value that identifies the mutex.
+     * @param identifier Identifier of the mutex.
      * @param mutexTimeout Amount of time the mutex lock is valid until it can be reacquired.
      * @param pollTimeout Amount of time to wait for the mutex to become available.
      * @return
      */
-    boolean acquireMutexLock(String key, long mutexTimeout, long pollTimeout) {
-        return acquireMutexLock(key, mutexTimeout, pollTimeout, DEFAULT_POLL_INTERVAL)
+    boolean acquireMutexLock(String identifier, long mutexTimeout, long pollTimeout) {
+        return acquireMutexLock(identifier, mutexTimeout, pollTimeout, DEFAULT_POLL_INTERVAL)
     }
 
     /**
-     * Attempts to acquire a mutex lock for a given key.
+     * Attempts to acquire a mutex lock for a given identifier.
      *
-     * @param key Key value that identifies the mutex.
+     * @param identifier Identifier of the mutex.
      * @param mutexTimeout Amount of time the mutex lock is valid until it can be reacquired.
      * @param pollTimeout Amount of time to wait for the mutex to become available.
      * @param pollInterval Amount of time to wait before checking on the mutex availability.
      * @return
      */
-    boolean acquireMutexLock(String key, long mutexTimeout, long pollTimeout, long pollInterval) {
+    boolean acquireMutexLock(String identifier, long mutexTimeout, long pollTimeout, long pollInterval) {
         // Mark the start time
         Long start = new Date().time
+
+        // Create a key
+        String key = UUID.randomUUID().toString()
 
         // Loop until the timeout is reached
         while (pollTimeout == 0 || new Date().time < start + pollTimeout) {
@@ -142,11 +145,11 @@ class DistributedMutexHelper {
                 // Run within a transaction
                 DistributedMutex.withTransaction {
                     // Find the existing mutex
-                    DistributedMutex mutex = DistributedMutex.findByKeyValue(key)
+                    DistributedMutex mutex = DistributedMutex.findByIdentifier(identifier)
 
                     // If the mutex wasn't found, create one. Otherwise, force a refresh.
                     if (!mutex) {
-                        mutex = new DistributedMutex(keyValue: key)
+                        mutex = new DistributedMutex(identifier: identifier)
                     }
                     else {
                         mutex.refresh()
@@ -159,7 +162,7 @@ class DistributedMutexHelper {
 
                     // Log a warning if the mutex is expired
                     if (mutex.expires && mutex.expires.time < new Date().time) {
-                        log.warn("mutex identified by \"${key}\" is expired and has been reacquired by a new requester")
+                        log.warn("mutex identified by \"${identifier}\" is expired and has been reacquired by a new requester")
                     }
 
                     // Determine the expiration time
@@ -172,6 +175,7 @@ class DistributedMutexHelper {
 
                     // Mark the mutex locked and save
                     mutex.locked = true
+                    mutex.key = key
                     mutex.expires = expires
                     mutex.save(flush: true, failOnError: true)
 
@@ -181,6 +185,7 @@ class DistributedMutexHelper {
 
                 // Return now if the lock was acquired
                 if (locked) {
+                    log.debug("Successfully acquired mutex lock for identifier '${identifier}' with key '${key}'.")
                     return true
                 }
             }
@@ -207,25 +212,37 @@ class DistributedMutexHelper {
     }
 
     /**
-     * Releases a mutex lock for a given key.
+     * Releases a mutex lock for a given identifier.
      *
-     * @param key
+     * @param identifier
      */
-    void releaseMutexLock(String key) {
-        DistributedMutex.withTransaction {
-            // Find the mutex
-            DistributedMutex mutex = DistributedMutex.findByKeyValue(key)
+    void releaseMutexLock(String identifier) {
+        try {
+            DistributedMutex.withTransaction {
+                // Find the mutex
+                DistributedMutex mutex = DistributedMutex.findByIdentifier(identifier)
 
-            // If one wasn't found, quit
-            if (!mutex) {
-                log.warn("no mutex with key \"${key}\" was found")
-                return
+                // If one wasn't found, quit
+                if (!mutex) {
+                    log.warn("no mutex with identifier \"${identifier}\" was found")
+                    return
+                }
+
+                // Mark it unlocked and save
+                mutex.locked = false
+                mutex.expires = null
+                mutex.key = null
+                mutex.save(flush: true, failOnError: true)
             }
-
-            // Mark it unlocked and save
-            mutex.locked = false
-            mutex.expires = null
-            mutex.save(flush: true, failOnError: true)
+        }
+        catch (OptimisticLockingFailureException e) {
+            log.warn("OptimisticLockingFailureException caught while attempting to release lock; will automatically retry")
+        }
+        catch (StaleObjectStateException e) {
+            log.warn("StaleObjectStateException caught while attempting to release lock; will automatically retry")
+        }
+        catch (Exception e) {
+            log.warn("unexpected exception '${e.class}' caught while attempting to acquire lock; will automatically retry", e)
         }
     }
 }

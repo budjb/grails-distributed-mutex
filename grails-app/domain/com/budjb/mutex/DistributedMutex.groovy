@@ -17,9 +17,14 @@ package com.budjb.mutex
 
 class DistributedMutex {
     /**
+     * Identifier.
+     */
+    String identifier
+
+    /**
      * Mutex key.
      */
-    String keyValue
+    String key
 
     /**
      * Whether the mutex is locked.
@@ -40,8 +45,13 @@ class DistributedMutex {
      * Field constraints.
      */
     static constraints = {
-        keyValue unique: true, nullable: false, blank: false
+        identifier unique: true, nullable: false, blank: false
+        key nullable: true, blank: false
         lastUpdated nullable: true
         expires nullable: true
+    }
+
+    static mapping = {
+        key column: '_key'
     }
 }
