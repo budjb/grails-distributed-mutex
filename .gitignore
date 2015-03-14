@@ -16,3 +16,5 @@ stacktrace.log
 /web-app/WEB-INF
 .idea
 *.iml
+.project
+.classpath
