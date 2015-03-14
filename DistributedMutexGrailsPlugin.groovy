@@ -34,7 +34,7 @@ class DistributedMutexGrailsPlugin {
     /**
      * Excluded resources.
      */
-    def pluginExcludes = []
+    def pluginExcludes = ['grails-app/conf/DataSource.groovy']
 
     /**
      * Plugin title.

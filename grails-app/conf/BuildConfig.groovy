@@ -26,9 +26,15 @@ grails.project.dependency.resolution = {
     log "warn" // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
     repositories {
         grailsCentral()
-
+        mavenCentral()
         mavenRepo "https://repo.grails.org/grails/plugins"
 
+    }
+
+    dependencies {
+        test('org.objenesis:objenesis:2.1') {
+            export = false
+        }
     }
 
     plugins {
@@ -39,5 +45,9 @@ grails.project.dependency.resolution = {
         }
 
         runtime ":hibernate:$grailsVersion"
+
+        test(":spock:0.7", ":code-coverage:1.2.7") {
+            export = false
+        }
     }
 }
