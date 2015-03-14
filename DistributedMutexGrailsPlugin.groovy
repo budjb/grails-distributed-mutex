@@ -84,7 +84,6 @@ to serialize parallel processes acting on the same resources.
      */
     def doWithSpring = {
         "distributedMutexHelper"(DistributedMutexHelper) { bean ->
-            bean.scope = 'singleton'
             bean.autowire = true
         }
     }

@@ -24,17 +24,17 @@ class DistributedMutexHelper {
     /**
      * Default poll interval (in milliseconds).
      */
-    public static int DEFAULT_POLL_INTERVAL = 500
+    static final int DEFAULT_POLL_INTERVAL = 500
 
     /**
      * Default timeout (in milliseconds) to wait for a lock acquisition before giving up.
      */
-    public static int DEFAULT_POLL_TIMEOUT = 0
+    static final int DEFAULT_POLL_TIMEOUT = 0
 
     /**
      * Default mutex timeout (in milliseconds).
      */
-    public static int DEFAULT_MUTEX_TIMEOUT = 0
+    static final int DEFAULT_MUTEX_TIMEOUT = 0
 
     /**
      * Logger.
@@ -93,8 +93,8 @@ class DistributedMutexHelper {
      * @param identifier Identity of the mutex.
      * @return
      */
-    boolean acquireMutexLock(String indentifier) {
-        return acquireMutexLock(indentifier, DEFAULT_MUTEX_TIMEOUT)
+    boolean acquireMutexLock(String identifier) {
+        return acquireMutexLock(identifier, DEFAULT_MUTEX_TIMEOUT)
     }
 
     /**

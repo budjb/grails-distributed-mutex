@@ -14,3 +14,5 @@ stacktrace.log
 /out/
 /web-app/plugins
 /web-app/WEB-INF
+.idea
+*.iml
