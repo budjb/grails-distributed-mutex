@@ -19,7 +19,7 @@ class DistributedMutexGrailsPlugin {
     /**
      * Plugin version.
      */
-    def version = "0.2.4"
+    def version = "1.0.0"
 
     /**
      * Grails version requirement.
@@ -55,7 +55,7 @@ class DistributedMutexGrailsPlugin {
      * Plugin description.
      */
     def description = '''\
-This is a plugin that provides applications database-driven mutex functionality
+This is a plugin that provides applications with database-driven mutex functionality
 to serialize parallel processes acting on the same resources.
 '''
 
