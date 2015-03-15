@@ -4,8 +4,6 @@ import com.budjb.mutex.exception.LockNotAcquiredException
 import grails.plugin.spock.IntegrationSpec
 import org.apache.log4j.Logger
 
-import java.util.concurrent.locks.Lock
-
 class DistributedMutexHelperSpec extends IntegrationSpec {
     final static String MUTEX_IDENTIFIER_NAME = 'foo-bar'
 
@@ -83,6 +81,22 @@ class DistributedMutexHelperSpec extends IntegrationSpec {
         then:
         DistributedMutex distributedMutex = DistributedMutex.findByIdentifier(MUTEX_IDENTIFIER_NAME)
         distributedMutex.locked == false
+    }
+
+    def 'Test releasing a mutex lock with the incorrect key'() {
+        setup:
+        Logger log = Mock(Logger)
+        distributedMutexHelper.log = log
+
+        distributedMutexHelper.acquireMutexLock(MUTEX_IDENTIFIER_NAME)
+
+        when:
+        distributedMutexHelper.releaseMutexLock(MUTEX_IDENTIFIER_NAME, 'foobar')
+
+        then:
+        DistributedMutex distributedMutex = DistributedMutex.findByIdentifier(MUTEX_IDENTIFIER_NAME)
+        distributedMutex.locked == true
+        1 * log.warn("the key on mutex with identifier '$MUTEX_IDENTIFIER_NAME' does not match the key provided with the request to unlock the mutex")
     }
 
     def 'Test checking whether a mutex is locked'() {
