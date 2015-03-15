@@ -1,0 +1,11 @@
+The @distributedMutexHelper.acquireMutex@ methods can be used to acquire a mutex lock for a given *identifier*. These
+methods return a string *key*, which is required to unlock the mutex.
+
+If no mutex timeout is provided, the mutex will remain locked indefinitely until it is released. Otherwise, if a mutex
+timeout is provided, the mutex will remain valid until it is either released or it expires, at which time it can be
+locked by another process attempting to lock the mutex.
+
+When attempting to acquire a locked mutex, an optional poll timeout can be provided. By default, this poll timeout is
+0, which caused the method to only attempt to lock the mutex once.  If a poll timeout is provided, the method will poll
+the mutex for as long as the poll timeout allows the mutex to be acquired. The interval of this polling is configurable
+as well.

@@ -1,0 +1,9 @@
+introduction: Introduction
+usage:
+    title: Usage
+    acquiring: Acquiring A Mutex
+    check: Checking If A Mutex Is Locked
+    releasing: Releasing A Mutex
+    force: Force A Mutex To Be Released
+    example: A Quick Example
+changelog: Changelog

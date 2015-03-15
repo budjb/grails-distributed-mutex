@@ -1,0 +1,54 @@
+To illustrate how the plugin should be used, this is a trivial example of how to interact with a distributed mutex.
+The logic inside the mutex lock is not complex enough to warrant the use of a distributed mutex, but the intention
+is to demonstrate the interaction with the @distributedMutexHelper@.
+
+{code}
+package com.budjb.example
+
+import com.budjb.mutex.DistributedMutexHelper
+
+class MutexExampleService {
+    /**
+     * The distributed mutex helper bean.
+     */
+    DistributedMutexHelper distributedMutexHelper
+
+    /**
+     * Storing state in a singleton service is a bad idea unless you can isolate access to it.
+     */
+    int counter = 0
+
+    /**
+     * The identifier for the mutex.
+     */
+    static final String MUTEX_IDENTIFIER = 'example-counter-mutex'
+
+    /**
+     * Every time the counter is accessed, it should be incremented.
+     *
+     * @return int
+     */
+    int getCounter() throws LockNotAcquiredException {
+        // Acquire the mutex lock. The key is used to unlock it later.
+        // If the mutex can not be acquired, a LockNotAcquiredException will be thrown
+        // by the distributedMutexHelper. Ideally your application will handle this
+        // error somehow.
+        //
+        // We will acquire the mutex for a period of 10 seconds.
+        String key = distributedMutexHelper.acquireMutex(MUTEX_IDENTIFIER, 10000)
+
+        // Wrap our operation with a try/finally so that if any exception or error occurs,
+        // the mutex will be released. While the mutex will time out in 10 seconds anyway,
+        // this is especially important when a mutex has an indefinite lifespan (no timeout).
+        // Your application can obviously handle different exception cases here as well,
+        // but this example will not account for any exceptions thrown because of the simple
+        // logic this method performs.
+        try {
+            return ++counter
+        }
+        finally {
+            distributedMutexHelper.releaseMutexLock(MUTEX_IDENTIFIER, key)
+        }
+    }
+}
+{code}

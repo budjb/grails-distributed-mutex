@@ -202,7 +202,7 @@ class DistributedMutexHelper {
 
             // If timeout is 0, just stop at one try
             if (pollTimeout == 0) {
-                return false
+                break
             }
 
             // Sleep a bit

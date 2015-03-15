@@ -1,0 +1,2 @@
+To check whether a mutex is locked, the @distributedMutexHelper.isMutexLocked@ method can be used. The method returns
+@true@ if the mutex has been locked by another process.
