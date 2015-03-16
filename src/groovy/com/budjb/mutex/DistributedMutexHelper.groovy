@@ -132,7 +132,7 @@ class DistributedMutexHelper {
                 mutex.locked = true
                 mutex.key = key
                 mutex.expires = expires
-                mutex.save(failOnError: true)
+                mutex.save(flush: true, failOnError: true)
 
                 // Mark it locked
                 locked = true
@@ -183,7 +183,7 @@ class DistributedMutexHelper {
             mutex.locked = false
             mutex.expires = null
             mutex.key = null
-            mutex.save(failOnError: true)
+            mutex.save(flush: true, failOnError: true)
         }
     }
 
@@ -214,7 +214,7 @@ class DistributedMutexHelper {
             mutex.locked = false
             mutex.expires = null
             mutex.key = null
-            mutex.save(failOnError: true)
+            mutex.save(flush: true, failOnError: true)
 
             log.warn("mutex with identifier '{}' was forcibly released", identifier)
         }
