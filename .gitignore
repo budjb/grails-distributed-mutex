@@ -7,7 +7,6 @@
 *.iws
 *.log
 /cobertura.ser
-/doc
 /grails-distributed-mutex-*.zip
 /grails-distributed-mutex-*.zip.sha1
 /plugin.xml
