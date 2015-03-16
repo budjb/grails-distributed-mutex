@@ -67,6 +67,13 @@ class DistributedMutexGrailsPlugin {
     def scm = [url: 'https://github.com/budjb/grails-distributed-mutex']
 
     /**
+     * Excluded files.
+     */
+    def pluginExcludes = [
+        'src/docs/**'
+    ]
+
+    /**
      * Spring bean configuration.
      */
     def doWithSpring = {
