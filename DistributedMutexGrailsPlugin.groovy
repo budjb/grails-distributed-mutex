@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Bud Byrd
+ * Copyright 2015 Bud Byrd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,16 +27,6 @@ class DistributedMutexGrailsPlugin {
     def grailsVersion = "2.0 > *"
 
     /**
-     * Plugin dependencies.
-     */
-    def dependsOn = [:]
-
-    /**
-     * Excluded resources.
-     */
-    def pluginExcludes = ['grails-app/conf/DataSource.groovy']
-
-    /**
      * Plugin title.
      */
     def title = "Distributed Mutex Plugin"
@@ -54,10 +44,7 @@ class DistributedMutexGrailsPlugin {
     /**
      * Plugin description.
      */
-    def description = '''\
-This is a plugin that provides applications with database-driven mutex functionality
-to serialize parallel processes acting on the same resources.
-'''
+    def description = 'Provides applications with database-driven mutex functionality to serialize parallel processes acting on the same resources.'
 
     /**
      * Documentation.
@@ -72,7 +59,7 @@ to serialize parallel processes acting on the same resources.
     /**
      * Issue tracker.
      */
-    def issueManagement = [system: 'GITHUB', url: 'https://github.com/budjb/grails-distributed-mutex/issues']
+    def issueManagement = [url: 'https://github.com/budjb/grails-distributed-mutex/issues']
 
     /**
      * Online location of the plugin's browseable source code.
@@ -83,8 +70,6 @@ to serialize parallel processes acting on the same resources.
      * Spring bean configuration.
      */
     def doWithSpring = {
-        "distributedMutexHelper"(DistributedMutexHelper) { bean ->
-            bean.autowire = true
-        }
+        distributedMutexHelper(DistributedMutexHelper)
     }
 }

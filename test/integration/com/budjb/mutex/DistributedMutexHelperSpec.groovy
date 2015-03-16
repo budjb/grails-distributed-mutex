@@ -18,9 +18,12 @@ class DistributedMutexHelperSpec extends IntegrationSpec {
 
         key != null
 
+        when:
         DistributedMutex mutex = DistributedMutex.findByIdentifier(MUTEX_IDENTIFIER_NAME)
+
+        then:
         mutex != null
-        mutex.locked == true
+        mutex.locked
         mutex.expires == null
         mutex.key == key
     }
@@ -34,9 +37,12 @@ class DistributedMutexHelperSpec extends IntegrationSpec {
 
         key != null
 
+        when:
         DistributedMutex mutex = DistributedMutex.findByIdentifier(MUTEX_IDENTIFIER_NAME)
+
+        then:
         mutex != null
-        mutex.locked == true
+        mutex.locked
         mutex.expires != null
         mutex.key == key
     }
@@ -53,7 +59,7 @@ class DistributedMutexHelperSpec extends IntegrationSpec {
         boolean locked = distributedMutexHelper.acquireMutexLock(MUTEX_IDENTIFIER_NAME, 10000, 1000)
 
         then:
-        locked == true
+        locked
         1 * log.warn("mutex identified by '$MUTEX_IDENTIFIER_NAME' is expired and has been reacquired by a new requester")
 
         cleanup:
@@ -77,10 +83,10 @@ class DistributedMutexHelperSpec extends IntegrationSpec {
 
         when:
         distributedMutexHelper.releaseMutexLock(MUTEX_IDENTIFIER_NAME, key)
+        DistributedMutex distributedMutex = DistributedMutex.findByIdentifier(MUTEX_IDENTIFIER_NAME)
 
         then:
-        DistributedMutex distributedMutex = DistributedMutex.findByIdentifier(MUTEX_IDENTIFIER_NAME)
-        distributedMutex.locked == false
+        !distributedMutex.locked
     }
 
     def 'Test releasing a mutex lock with the incorrect key'() {
@@ -92,10 +98,10 @@ class DistributedMutexHelperSpec extends IntegrationSpec {
 
         when:
         distributedMutexHelper.releaseMutexLock(MUTEX_IDENTIFIER_NAME, 'foobar')
+        DistributedMutex distributedMutex = DistributedMutex.findByIdentifier(MUTEX_IDENTIFIER_NAME)
 
         then:
-        DistributedMutex distributedMutex = DistributedMutex.findByIdentifier(MUTEX_IDENTIFIER_NAME)
-        distributedMutex.locked == true
+        distributedMutex.locked
         1 * log.warn("the key on mutex with identifier '$MUTEX_IDENTIFIER_NAME' does not match the key provided with the request to unlock the mutex")
     }
 
@@ -114,7 +120,7 @@ class DistributedMutexHelperSpec extends IntegrationSpec {
         locked = distributedMutexHelper.isMutexLocked(MUTEX_IDENTIFIER_NAME)
 
         then:
-        locked == false
+        !locked
     }
 
     def 'If a mutex is acquired and released, it should be able to be acquired again'() {
@@ -128,7 +134,11 @@ class DistributedMutexHelperSpec extends IntegrationSpec {
         then:
         notThrown LockNotAcquiredException
         key != null
+
+        when:
         DistributedMutex distributedMutex = DistributedMutex.findByIdentifier(MUTEX_IDENTIFIER_NAME)
-        distributedMutex.locked == true
+
+        then:
+        distributedMutex.locked
     }
 }

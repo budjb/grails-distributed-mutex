@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Bud Byrd
+ * Copyright 2015 Bud Byrd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ class DistributedMutex {
      * Field constraints.
      */
     static constraints = {
-        identifier unique: true, nullable: false, blank: false
+        identifier unique: true, blank: false
         key nullable: true, blank: false
         lastUpdated nullable: true
         expires nullable: true
