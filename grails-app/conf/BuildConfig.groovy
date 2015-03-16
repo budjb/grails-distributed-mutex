@@ -1,5 +1,5 @@
-/*
- * Copyright 2014 Bud Byrd
+/**
+ * Copyright 2015 Bud Byrd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-grails.project.class.dir = "target/classes"
-grails.project.test.class.dir = "target/test-classes"
-grails.project.test.reports.dir = "target/test-reports"
+grails.project.work.dir = "target"
 
 grails.project.dependency.resolution = {
-    // inherit Grails' default dependencies
-    inherits("global") {
-        // uncomment to disable ehcache
-        // excludes 'ehcache'
-    }
-    log "warn" // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
+    inherits "global"
+    log "warn"
     repositories {
+        mavenLocal()
         grailsCentral()
         mavenCentral()
         mavenRepo "https://repo.grails.org/grails/plugins"
-
     }
 
     dependencies {
@@ -38,13 +32,13 @@ grails.project.dependency.resolution = {
     }
 
     plugins {
-        build(":tomcat:$grailsVersion",
-              ":release:2.0.3",
-              ":rest-client-builder:1.0.2") {
+        build(":release:2.2.1", ":rest-client-builder:1.0.3") {
             export = false
         }
 
-        runtime ":hibernate:$grailsVersion"
+        runtime ":hibernate:$grailsVersion", {
+            export = false
+        }
 
         test(":spock:0.7", ":code-coverage:1.2.7") {
             export = false

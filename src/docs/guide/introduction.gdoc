@@ -1,15 +1,5 @@
-The *Distributed Mutex* plugin provides a way to create mutexes backed by a database row. This helps when writing
-distributed systems that need to lock a resource but database transactions are not sufficient to encapsulate the
-resource being accessed.
+The *Distributed Mutex* plugin provides a way to create mutexes backed by a database row. This helps when writing distributed systems that need to lock a resource but database transactions are not sufficient to encapsulate the resource being accessed.
 
-Mutexes are typically used within the context of a single application and stored in memory. When an application is
-designed to be scaled horizontally (where multiple instances can be spun up and load balanced), a mechanism may be needed
-to ensure that an action against a resource or resources can only be taken once at any given moment. Since these
-applications do not share the same memory space, a distributed mutex extracts the storage of the mutex object
-from memory into a database that all of the applications are configured to use.
+Mutexes are typically used within the context of a single application and stored in memory. When an application is designed to be scaled horizontally (where multiple instances can be spun up and load balanced), a mechanism may be needed to ensure that an action against a resource or resources can only be taken once at any given moment. Since these applications do not share the same memory space, a distributed mutex extracts the storage of the mutex object from memory into a database that all of the applications are configured to use.
 
-This plugin includes a domain and a service to interact with distributed mutexes. It allows applications to create
-mutexes with or without a defined lifespan, and the ability to acquire a mutex while waiting for it to become available
-in some requested time frame. The service that handles the database interaction is robust enough to handle transactional
-errors so that applications using the plugin need not worry about implementing their own retrying mutex acquisition
-logic due to such errors.
+This plugin includes a domain and a service to interact with distributed mutexes. It allows applications to create mutexes with or without a defined lifespan, and the ability to acquire a mutex while waiting for it to become available in some requested time frame. The service that handles the database interaction is robust enough to handle transactional errors so that applications using the plugin need not worry about implementing their own retrying mutex acquisition logic due to such errors.

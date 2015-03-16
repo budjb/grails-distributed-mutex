@@ -1,6 +1,4 @@
-To illustrate how the plugin should be used, this is a trivial example of how to interact with a distributed mutex.
-The logic inside the mutex lock is not complex enough to warrant the use of a distributed mutex, but the intention
-is to demonstrate the interaction with the @distributedMutexHelper@.
+To illustrate how the plugin should be used, this is a trivial example of how to interact with a distributed mutex. The logic inside the mutex lock is not complex enough to warrant the use of a distributed mutex, but the intention is to demonstrate the interaction with the @distributedMutexHelper@.
 
 {code}
 package com.budjb.example
@@ -16,7 +14,7 @@ class MutexExampleService {
     /**
      * Storing state in a singleton service is a bad idea unless you can isolate access to it.
      */
-    int counter = 0
+    private int counter = 0
 
     /**
      * The identifier for the mutex.
@@ -26,13 +24,13 @@ class MutexExampleService {
     /**
      * Every time the counter is accessed, it should be incremented.
      *
-     * @return int
+     * @return the current counter value
      */
     int getCounter() throws LockNotAcquiredException {
         // Acquire the mutex lock. The key is used to unlock it later.
         // If the mutex can not be acquired, a LockNotAcquiredException will be thrown
         // by the distributedMutexHelper. Ideally your application will handle this
-        // error somehow.
+        // error.
         //
         // We will acquire the mutex for a period of 10 seconds.
         String key = distributedMutexHelper.acquireMutex(MUTEX_IDENTIFIER, 10000)

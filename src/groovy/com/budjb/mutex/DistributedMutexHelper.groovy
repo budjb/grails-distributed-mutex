@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Bud Byrd
+ * Copyright 2015 Bud Byrd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 package com.budjb.mutex
 
 import com.budjb.mutex.exception.LockNotAcquiredException
-import org.apache.log4j.Logger
 import org.hibernate.StaleObjectStateException
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.dao.OptimisticLockingFailureException
-import groovy.time.TimeCategory
 
 class DistributedMutexHelper {
     /**
@@ -40,36 +40,26 @@ class DistributedMutexHelper {
     /**
      * Logger.
      */
-    Logger log = Logger.getLogger(DistributedMutexHelper)
+    Logger log = LoggerFactory.getLogger(DistributedMutexHelper)
 
     /**
      * Determines if a mutex is currently locked.
-     *
-     * @param identifier
-     * @return
      */
     boolean isMutexLocked(String identifier) {
-        // Load the mutex
-        DistributedMutex mutex
         DistributedMutex.withNewSession {
-            mutex = DistributedMutex.findByIdentifier(identifier)
+            return isMutexLocked(DistributedMutex.findByIdentifier(identifier))
         }
+    }
 
+    /**
+     * Determines if a mutex is currently locked.
+     */
+    protected boolean isMutexLocked(DistributedMutex mutex) {
         // If there is no existing mutex, it cannot be locked
         if (!mutex) {
             return false
         }
 
-        return isMutexLocked(mutex)
-    }
-
-    /**
-     * Determines if a mutex is currently locked.
-     *
-     * @param mutex
-     * @return
-     */
-    protected boolean isMutexLocked(DistributedMutex mutex) {
         // Check if the mutex is unlocked
         if (!mutex.locked) {
             return false
@@ -81,44 +71,11 @@ class DistributedMutexHelper {
         }
 
         // Finally, check whether the lock has expired
-        if (mutex.expires.time >= new Date().time) {
+        if (mutex.expires.time >= System.currentTimeMillis()) {
             return true
         }
 
         return false
-    }
-
-    /**
-     * Attempts to acquire a mutex lock for a given identifier.
-     *
-     * @param identifier Identity of the mutex.
-     * @return Mutex lock key required to release the mutex lock.
-     */
-    String acquireMutexLock(String identifier) throws LockNotAcquiredException {
-        return acquireMutexLock(identifier, DEFAULT_MUTEX_TIMEOUT)
-    }
-
-    /**
-     * Attempts to acquire a mutex lock for a given identifier.
-     *
-     * @param identifier Identity of the mutex.
-     * @param mutexTimeout Amount of time the mutex lock is valid until it can be reacquired.
-     * @return Mutex lock key required to release the mutex lock.
-     */
-    String acquireMutexLock(String identifier, long mutexTimeout) throws LockNotAcquiredException {
-        return acquireMutexLock(identifier, mutexTimeout, DEFAULT_POLL_TIMEOUT)
-    }
-
-    /**
-     * Attempts to acquire a mutex lock for a given identifier.
-     *
-     * @param identifier Identifier of the mutex.
-     * @param mutexTimeout Amount of time the mutex lock is valid until it can be reacquired.
-     * @param pollTimeout Amount of time to wait for the mutex to become available.
-     * @return Mutex lock key required to release the mutex lock.
-     */
-    String acquireMutexLock(String identifier, long mutexTimeout, long pollTimeout) throws LockNotAcquiredException {
-        return acquireMutexLock(identifier, mutexTimeout, pollTimeout, DEFAULT_POLL_INTERVAL)
     }
 
     /**
@@ -130,74 +87,61 @@ class DistributedMutexHelper {
      * @param pollInterval Amount of time to wait before checking on the mutex availability.
      * @return Mutex lock key required to release the mutex lock.
      */
-    String acquireMutexLock(String identifier, long mutexTimeout, long pollTimeout, long pollInterval) throws LockNotAcquiredException {
+    String acquireMutexLock(String identifier, long mutexTimeout = DEFAULT_MUTEX_TIMEOUT,
+            long pollTimeout = DEFAULT_POLL_TIMEOUT, long pollInterval = DEFAULT_POLL_INTERVAL) throws LockNotAcquiredException {
         // Mark the start time
-        Long start = new Date().time
+        Long start = System.currentTimeMillis()
 
         // Create a key
-        String key = UUID.randomUUID().toString()
+        String key = UUID.randomUUID()
 
         // Loop until the timeout is reached
-        while (pollTimeout == 0 || new Date().time < start + pollTimeout) {
-            try {
-                // Track success
-                boolean locked = false
+        while (pollTimeout == 0 || start + pollTimeout > System.currentTimeMillis()) {
+            // Track success
+            boolean locked = false
 
-                // Run within a transaction
-                DistributedMutex.withTransaction {
-                    // Find the existing mutex
-                    DistributedMutex mutex = DistributedMutex.findByIdentifier(identifier)
+            withTransaction true, {
+                // Find the existing mutex
+                DistributedMutex mutex = DistributedMutex.findByIdentifier(identifier)
 
-                    // If the mutex wasn't found, create one. Otherwise, force a refresh.
-                    if (!mutex) {
-                        mutex = new DistributedMutex(identifier: identifier)
-                    }
-                    else {
-                        mutex.refresh()
-                    }
+                // If the mutex wasn't found, create one. Otherwise, force a refresh.
+                if (!mutex) {
+                    mutex = new DistributedMutex(identifier: identifier)
+                }
+                else {
+                    mutex.refresh()
 
                     // Check if the mutex is locked
                     if (isMutexLocked(mutex)) {
                         return
                     }
-
-                    // Log a warning if the mutex is expired
-                    if (mutex.expires && mutex.expires.time < new Date().time) {
-                        log.warn("mutex identified by '$identifier' is expired and has been reacquired by a new requester")
-                    }
-
-                    // Determine the expiration time
-                    Date expires = null
-                    if (mutexTimeout > 0) {
-                        use(TimeCategory) {
-                            expires = new Date() + (mutexTimeout as int).milliseconds
-                        }
-                    }
-
-                    // Mark the mutex locked and save
-                    mutex.locked = true
-                    mutex.key = key
-                    mutex.expires = expires
-                    mutex.save(flush: true, failOnError: true)
-
-                    // Mark it locked
-                    locked = true
                 }
 
-                // Return now if the lock was acquired
-                if (locked) {
-                    log.debug("Successfully acquired mutex lock for identifier '${identifier}' with key '${key}'.")
-                    return key
+                // Log a warning if the mutex is expired
+                if (mutex.expires && System.currentTimeMillis() > mutex.expires.time) {
+                    log.warn("mutex identified by '{}' is expired and has been reacquired by a new requester", identifier)
                 }
+
+                // Determine the expiration time
+                Date expires
+                if (mutexTimeout > 0) {
+                    expires = new Date(System.currentTimeMillis() + mutexTimeout)
+                }
+
+                // Mark the mutex locked and save
+                mutex.locked = true
+                mutex.key = key
+                mutex.expires = expires
+                mutex.save(failOnError: true)
+
+                // Mark it locked
+                locked = true
             }
-            catch (OptimisticLockingFailureException e) {
-                log.warn("OptimisticLockingFailureException caught while attempting to acquire lock; will automatically retry if the acquire timeout has not expired")
-            }
-            catch (StaleObjectStateException e) {
-                log.warn("StaleObjectStateException caught while attempting to acquire lock; will automatically retry if the acquire timeout has not expired")
-            }
-            catch (Exception e) {
-                log.warn("unexpected exception '${e.class}' caught while attempting to acquire lock; will automatically retry if the acquire timeout has not expired", e)
+
+            // Return now if the lock was acquired
+            if (locked) {
+                log.debug("Successfully acquired mutex lock for identifier '{}' with key '{}'.", identifier, key)
+                return key
             }
 
             // If timeout is 0, just stop at one try
@@ -219,38 +163,27 @@ class DistributedMutexHelper {
      * @param key Key required to unlock the mutex.
      */
     void releaseMutexLock(String identifier, String key) {
-        try {
-            DistributedMutex.withTransaction {
-                // Find the mutex
-                DistributedMutex mutex = DistributedMutex.findByIdentifier(identifier)
+        withTransaction {
+            // Find the mutex
+            DistributedMutex mutex = DistributedMutex.findByIdentifier(identifier)
 
-                // If one wasn't found, quit
-                if (!mutex) {
-                    log.warn("no mutex with identifier '$identifier' was found")
-                    return
-                }
-
-                // Check if the keys match
-                if (mutex.key != key) {
-                    log.warn("the key on mutex with identifier '$identifier' does not match the key provided with the request to unlock the mutex")
-                    return
-                }
-
-                // Mark it unlocked and save
-                mutex.locked = false
-                mutex.expires = null
-                mutex.key = null
-                mutex.save(flush: true, failOnError: true)
+            // If one wasn't found, quit
+            if (!mutex) {
+                log.warn("no mutex with identifier '{}' was found", identifier)
+                return
             }
-        }
-        catch (OptimisticLockingFailureException e) {
-            log.warn("OptimisticLockingFailureException caught while attempting to release lock; will automatically retry")
-        }
-        catch (StaleObjectStateException e) {
-            log.warn("StaleObjectStateException caught while attempting to release lock; will automatically retry")
-        }
-        catch (Exception e) {
-            log.warn("unexpected exception '${e.class}' caught while attempting to acquire lock; will automatically retry", e)
+
+            // Check if the keys match
+            if (mutex.key != key) {
+                log.warn("the key on mutex with identifier '{}' does not match the key provided with the request to unlock the mutex", identifier)
+                return
+            }
+
+            // Mark it unlocked and save
+            mutex.locked = false
+            mutex.expires = null
+            mutex.key = null
+            mutex.save(failOnError: true)
         }
     }
 
@@ -267,34 +200,39 @@ class DistributedMutexHelper {
      * @param identifier
      */
     void forciblyReleaseMutex(String identifier) {
-        try {
-            DistributedMutex.withTransaction {
-                // Find the mutex
-                DistributedMutex mutex = DistributedMutex.findByIdentifier(identifier)
+        withTransaction {
+            // Find the mutex
+            DistributedMutex mutex = DistributedMutex.findByIdentifier(identifier)
 
-                // If one wasn't found, quit
-                if (!mutex) {
-                    log.warn("no mutex with identifier '$identifier' was found")
-                    return
-                }
-
-                // Mark it unlocked and save
-                mutex.locked = false
-                mutex.expires = null
-                mutex.key = null
-                mutex.save(flush: true, failOnError: true)
-
-                log.warn("mutex with identifier '$identifier' was forcibly released")
+            // If one wasn't found, quit
+            if (!mutex) {
+                log.warn("no mutex with identifier '{}' was found", identifier)
+                return
             }
+
+            // Mark it unlocked and save
+            mutex.locked = false
+            mutex.expires = null
+            mutex.key = null
+            mutex.save(failOnError: true)
+
+            log.warn("mutex with identifier '{}' was forcibly released", identifier)
+        }
+    }
+
+    protected void withTransaction(boolean ifNotExpired = false, Closure c) {
+        String suffix = ifNotExpired ? 'if the acquire timeout has not expired' : ''
+        try {
+            DistributedMutex.withTransaction c
         }
         catch (OptimisticLockingFailureException e) {
-            log.warn("OptimisticLockingFailureException caught while attempting to release lock; will automatically retry")
+            log.warn("OptimisticLockingFailureException caught while attempting to release lock; will automatically retry {}", suffix)
         }
         catch (StaleObjectStateException e) {
-            log.warn("StaleObjectStateException caught while attempting to release lock; will automatically retry")
+            log.warn("StaleObjectStateException caught while attempting to release lock; will automatically retry {}", suffix)
         }
         catch (Exception e) {
-            log.warn("unexpected exception '${e.class}' caught while attempting to acquire lock; will automatically retry", e)
+            log.warn("unexpected exception '${e.class.name}' caught while attempting to acquire lock; will automatically retry " + suffix, e)
         }
     }
 }

@@ -1,14 +1,9 @@
-A mutex can be unlocked with the @distributedMutexHelper.releaseMutexLock@ method, which requires both the mutex
-*identifier* and the lock *key* acquired when the mutex was locked. If the mutex's *key* matches the one provided to the
- @releaseMutexLock@ call,it will be marked is unlocked.
+A mutex can be unlocked with the @distributedMutexHelper.releaseMutexLock@ method, which requires both the mutex *identifier* and the lock *key* acquired when the mutex was locked. If the mutex's *key* matches the one provided to the @releaseMutexLock@ call,it will be marked is unlocked.
 
 {note}
-If the *key* provided to the @distributedMutexHelper.releaseMutexLock@ call does not match the one on the mutex, a
-warning will be logged and the mutex will not be unlocked.
+If the *key* provided to the @distributedMutexHelper.releaseMutexLock@ call does not match the one on the mutex, a warning will be logged and the mutex will not be unlocked.
 {note}
 
 {warning}
-It is important that processes that acquire a mutex have error handling logic in place so that the mutex is released
-even in the case of unrecoverable failure.  If this is not done, a resource may be locked indefinitely, depending on
-the options used when the mutex was acquired.
+It is important that processes that acquire a mutex have error handling logic in place so that the mutex is released even in the case of unrecoverable failure.  If this is not done, a resource may be locked indefinitely, depending on the options used when the mutex was acquired.
 {warning}
