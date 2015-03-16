@@ -220,10 +220,18 @@ class DistributedMutexHelper {
         }
     }
 
+    /**
+     * Helper method to wrap a body of work with transaction error handling.
+     *
+     * @param ifNotExpired
+     * @param c
+     */
     protected void withTransaction(boolean ifNotExpired = false, Closure c) {
         String suffix = ifNotExpired ? 'if the acquire timeout has not expired' : ''
         try {
-            DistributedMutex.withTransaction c
+            DistributedMutex.withNewSession {
+                DistributedMutex.withTransaction c
+            }
         }
         catch (OptimisticLockingFailureException e) {
             log.warn("OptimisticLockingFailureException caught while attempting to release lock; will automatically retry {}", suffix)

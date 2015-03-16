@@ -1,5 +1,9 @@
-h3. Version 1.0.0 - TODO
-* Public release of the plugin on the Grails plugins site.
+h3. Version 1.0.1
+* Some cleanup items before plugin acceptance.
+* First public release.
+
+h3. Version 1.0.0
+* Public release candidate of the plugin on the Grails plugins site.
 * Added a lock key requirement to unlock a mutex.
 * @acquireMutex@ now returns a lock key instead of returning @boolean@.
 
