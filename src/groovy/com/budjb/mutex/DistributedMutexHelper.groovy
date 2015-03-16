@@ -16,9 +16,8 @@
 package com.budjb.mutex
 
 import com.budjb.mutex.exception.LockNotAcquiredException
+import org.apache.log4j.Logger
 import org.hibernate.StaleObjectStateException
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.dao.OptimisticLockingFailureException
 
 class DistributedMutexHelper {
@@ -40,7 +39,7 @@ class DistributedMutexHelper {
     /**
      * Logger.
      */
-    Logger log = LoggerFactory.getLogger(DistributedMutexHelper)
+    Logger log = Logger.getLogger(DistributedMutexHelper)
 
     /**
      * Determines if a mutex is currently locked.
@@ -90,7 +89,7 @@ class DistributedMutexHelper {
     String acquireMutexLock(String identifier, long mutexTimeout = DEFAULT_MUTEX_TIMEOUT,
             long pollTimeout = DEFAULT_POLL_TIMEOUT, long pollInterval = DEFAULT_POLL_INTERVAL) throws LockNotAcquiredException {
         // Mark the start time
-        Long start = System.currentTimeMillis()
+        long start = System.currentTimeMillis()
 
         // Create a key
         String key = UUID.randomUUID()
@@ -119,7 +118,7 @@ class DistributedMutexHelper {
 
                 // Log a warning if the mutex is expired
                 if (mutex.expires && System.currentTimeMillis() > mutex.expires.time) {
-                    log.warn("mutex identified by '{}' is expired and has been reacquired by a new requester", identifier)
+                    log.warn("mutex identified by '$identifier' is expired and has been reacquired by a new requester")
                 }
 
                 // Determine the expiration time
@@ -140,7 +139,7 @@ class DistributedMutexHelper {
 
             // Return now if the lock was acquired
             if (locked) {
-                log.debug("Successfully acquired mutex lock for identifier '{}' with key '{}'.", identifier, key)
+                log.debug("Successfully acquired mutex lock for identifier '${identifier}' with key '${key}'.")
                 return key
             }
 
@@ -169,13 +168,13 @@ class DistributedMutexHelper {
 
             // If one wasn't found, quit
             if (!mutex) {
-                log.warn("no mutex with identifier '{}' was found", identifier)
+                log.warn("no mutex with identifier '$identifier' was found")
                 return
             }
 
             // Check if the keys match
             if (mutex.key != key) {
-                log.warn("the key on mutex with identifier '{}' does not match the key provided with the request to unlock the mutex", identifier)
+                log.warn("the key on mutex with identifier '$identifier' does not match the key provided with the request to unlock the mutex")
                 return
             }
 
@@ -206,7 +205,7 @@ class DistributedMutexHelper {
 
             // If one wasn't found, quit
             if (!mutex) {
-                log.warn("no mutex with identifier '{}' was found", identifier)
+                log.warn("no mutex with identifier '$identifier' was found")
                 return
             }
 
@@ -216,7 +215,7 @@ class DistributedMutexHelper {
             mutex.key = null
             mutex.save(flush: true, failOnError: true)
 
-            log.warn("mutex with identifier '{}' was forcibly released", identifier)
+            log.warn("mutex with identifier '$identifier' was forcibly released")
         }
     }
 
@@ -226,10 +225,10 @@ class DistributedMutexHelper {
             DistributedMutex.withTransaction c
         }
         catch (OptimisticLockingFailureException e) {
-            log.warn("OptimisticLockingFailureException caught while attempting to release lock; will automatically retry {}", suffix)
+            log.warn("OptimisticLockingFailureException caught while attempting to release lock; will automatically retry " + suffix)
         }
         catch (StaleObjectStateException e) {
-            log.warn("StaleObjectStateException caught while attempting to release lock; will automatically retry {}", suffix)
+            log.warn("StaleObjectStateException caught while attempting to release lock; will automatically retry " + suffix)
         }
         catch (Exception e) {
             log.warn("unexpected exception '${e.class.name}' caught while attempting to acquire lock; will automatically retry " + suffix, e)
