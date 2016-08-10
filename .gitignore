@@ -6,3 +6,4 @@ src/
 .travis.yml
 LICENSE
 README.md
+target/

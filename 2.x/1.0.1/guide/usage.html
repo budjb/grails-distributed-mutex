@@ -1,0 +1,205 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+                      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+    <title>2 Usage 1.0.1</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <link rel="stylesheet" href="../css/main.css" type="text/css" media="screen, print" title="Style" charset="utf-8"/>
+    <link rel="stylesheet" href="../css/pdf.css" type="text/css" media="print" title="PDF" charset="utf-8"/>
+    <script type="text/javascript">
+function addJsClass() {
+    var classes = document.body.className.split(" ");
+    classes.push("js");
+    document.body.className = classes.join(" ");
+}
+    </script>
+</head>
+
+<body class="body" onload="addJsClass();">
+<div id="navigation">
+    <ul>
+        <li>
+            <div id="nav-summary" onmouseover="toggleNavSummary(false)" onmouseout="toggleNavSummary(true)">
+                <a href="../guide/index.html" class="button">Table of contents</a>
+
+                <div id="nav-summary-childs" style="display:none;">
+                    
+                    <div class="toc-item" style="margin-left:0"><a href="../guide/introduction.html"><strong>1</strong><span>Introduction</span></a>
+                    </div>
+                    
+                    <div class="toc-item" style="margin-left:0"><a href="../guide/usage.html"><strong>2</strong><span>Usage</span></a>
+                    </div>
+                    
+                    <div class="toc-item" style="margin-left:0"><a href="../guide/changelog.html"><strong>3</strong><span>Changelog</span></a>
+                    </div>
+                    
+                </div>
+            </div>
+        </li>
+        <li class="separator selected">
+            <a id="ref-button" onclick="localToggle(); return false;" href="#">Quick Reference</a>
+        </li>
+    </ul>
+</div>
+<div id="header">
+    <div class="images clearfix">
+        
+        
+    </div>
+    <p>Provides applications with database-driven mutex functionality to serialize parallel processes acting on the same resources.</p>
+</div>
+
+
+<table id="colset" border="0" cellpadding="0" cellspacing="0">
+    <tr>
+        <td id="col1">
+            <div id="main" class="corner-all">
+
+                
+                    <div class="toc-item prev-left"><a href="../guide/introduction.html">&lt;&lt; <strong>1</strong><span>Introduction</span></a></div>
+                
+
+                <span id='toggle-col1' class="toggle">(<a href="#" onclick="localToggle(); return false;">Quick Reference</a>)</span>
+
+                
+                    <div class="toc-item next-right"><a href="../guide/changelog.html"><strong>3</strong><span>Changelog</span> >></a></div>
+                
+
+
+                <div class="project">
+                    <h1>2 Usage - Reference Documentation</h1>
+
+                    <p><strong>Authors:</strong> Bud Byrd</p>
+
+                    <p><strong>Version:</strong> 1.0.1</p>
+
+                    
+                </div>
+
+                
+                <div id="table-of-content">
+                    <h2>Table of Contents</h2>
+                    
+                    <div class="toc-item" style="margin-left:0px"><a href="#acquiring"><strong>2.1</strong><span>Acquiring A Mutex</span></a>
+                    </div>
+                    
+                    <div class="toc-item" style="margin-left:0px"><a href="#check"><strong>2.2</strong><span>Checking If A Mutex Is Locked</span></a>
+                    </div>
+                    
+                    <div class="toc-item" style="margin-left:0px"><a href="#releasing"><strong>2.3</strong><span>Releasing A Mutex</span></a>
+                    </div>
+                    
+                    <div class="toc-item" style="margin-left:0px"><a href="#force"><strong>2.4</strong><span>Force A Mutex To Be Released</span></a>
+                    </div>
+                    
+                    <div class="toc-item" style="margin-left:0px"><a href="#example"><strong>2.5</strong><span>A Quick Example</span></a>
+                    </div>
+                    
+                </div>
+                
+
+                
+
+<h1 id="usage">2 Usage</h1>
+Mutexes are identified by an <strong class="bold">identifier</strong>. The <strong class="bold">identifier</strong> is an arbitrary string and should be well-known between the various parts of the application that utilize a particular mutex.<p class="paragraph"/>The <code>distributedMutexHelper</code> bean is the service that implements the interaction with distributed mutexes and can be injected into other managed Spring beans in your application.<p class="paragraph"/>This document does not detail the exact method signatures of the methods included in the <code>distributedMutexHelper</code>. The <a href="http://budjb.github.io/grails-distributed-mutex/doc/manual/gapi/index.html" target="blank">API documentation</a> can be used for exact details of how to use any of the methods discussed here.
+
+
+
+<h2 id="acquiring">2.1 Acquiring A Mutex</h2>
+The <code>distributedMutexHelper.acquireMutex</code> methods can be used to acquire a mutex lock for a given <strong class="bold">identifier</strong>. These methods return a string <strong class="bold">key</strong>, which is required to unlock the mutex.<p class="paragraph"/>If no mutex timeout is provided, the mutex will remain locked indefinitely until it is released. Otherwise, if a mutex timeout is provided, the mutex will remain valid until it is either released or it expires, at which time it can be locked by another process attempting to lock the mutex.<p class="paragraph"/>When attempting to acquire a locked mutex, an optional poll timeout can be provided. By default, this poll timeout is 0, which caused the method to only attempt to lock the mutex once.  If a poll timeout is provided, the method will poll the mutex for as long as the poll timeout allows the mutex to be acquired. The interval of this polling is configurable as well.
+
+
+
+<h2 id="check">2.2 Checking If A Mutex Is Locked</h2>
+To check whether a mutex is locked, the <code>distributedMutexHelper.isMutexLocked</code> method can be used. The method returns <code>true</code> if the mutex has been locked by another process.
+
+
+
+<h2 id="releasing">2.3 Releasing A Mutex</h2>
+A mutex can be unlocked with the <code>distributedMutexHelper.releaseMutexLock</code> method, which requires both the mutex <strong class="bold">identifier</strong> and the lock <strong class="bold">key</strong> acquired when the mutex was locked. If the mutex's <strong class="bold">key</strong> matches the one provided to the <code>releaseMutexLock</code> call,it will be marked is unlocked.<p class="paragraph"/><blockquote class="note">
+If the <strong class="bold">key</strong> provided to the <code>distributedMutexHelper.releaseMutexLock</code> call does not match the one on the mutex, a warning will be logged and the mutex will not be unlocked.
+</blockquote><p class="paragraph"/><blockquote class="warning">
+It is important that processes that acquire a mutex have error handling logic in place so that the mutex is released even in the case of unrecoverable failure.  If this is not done, a resource may be locked indefinitely, depending on the options used when the mutex was acquired.
+</blockquote>
+
+
+
+<h2 id="force">2.4 Force A Mutex To Be Released</h2>
+If a mutex was locked but never released, it may be necessary to force the release of the mutex lock regardless of the lock <strong class="bold">key</strong>. This should only be used as a means to restore the functionality of an application experiencing mutex dead locks, and never as part of normal mutex acquisition and releasing logic.<p class="paragraph"/>A mutex lock be can forcibly released using the <code>distributedMutexHelper.forciblyReleaseMutex</code> method. Only the mutex <strong class="bold">identifier</strong> is required for this operation.<p class="paragraph"/><blockquote class="warning">
+If the use of this method is required, it may be a good idea to investigate why a mutex was locked and not released. Good error handling should cover the majority of the cases where a mutex becomes indefinitely locked.
+</blockquote>
+
+
+
+<h2 id="example">2.5 A Quick Example</h2>
+To illustrate how the plugin should be used, this is a trivial example of how to interact with a distributed mutex. The logic inside the mutex lock is not complex enough to warrant the use of a distributed mutex, but the intention is to demonstrate the interaction with the <code>distributedMutexHelper</code>.<p class="paragraph"/><div class="code"><pre><span class="java&#45;keyword">package</span> com.budjb.example<p class="paragraph"/><span class="java&#45;keyword">import</span> com.budjb.mutex.DistributedMutexHelper<p class="paragraph"/>class MutexExampleService &#123;
+    /&#42;&#42;
+     &#42; The distributed mutex helper bean.
+     &#42;/
+    DistributedMutexHelper distributedMutexHelper<p class="paragraph"/>    /&#42;&#42;
+     &#42; Storing state in a singleton service is a bad idea unless you can isolate access to it.
+     &#42;/
+    <span class="java&#45;keyword">private</span> <span class="java&#45;object">int</span> counter = 0<p class="paragraph"/>    /&#42;&#42;
+     &#42; The identifier <span class="java&#45;keyword">for</span> the mutex.
+     &#42;/
+    <span class="java&#45;keyword">static</span> <span class="java&#45;keyword">final</span> <span class="java&#45;object">String</span> MUTEX_IDENTIFIER = 'example&#45;counter&#45;mutex'<p class="paragraph"/>    /&#42;&#42;
+     &#42; Every time the counter is accessed, it should be incremented.
+     &#42;
+     &#42; @<span class="java&#45;keyword">return</span> the current counter value
+     &#42;/
+    <span class="java&#45;object">int</span> getCounter() <span class="java&#45;keyword">throws</span> LockNotAcquiredException &#123;
+        // Acquire the mutex lock. The key is used to unlock it later.
+        // If the mutex can not be acquired, a LockNotAcquiredException will be thrown
+        // by the distributedMutexHelper. Ideally your application will handle <span class="java&#45;keyword">this</span>
+        // error.
+        //
+        // We will acquire the mutex <span class="java&#45;keyword">for</span> a period of 10 seconds.
+        <span class="java&#45;object">String</span> key = distributedMutexHelper.acquireMutex(MUTEX_IDENTIFIER, 10000)<p class="paragraph"/>        // Wrap our operation with a <span class="java&#45;keyword">try</span>/<span class="java&#45;keyword">finally</span> so that <span class="java&#45;keyword">if</span> any exception or error occurs,
+        // the mutex will be released. While the mutex will time out in 10 seconds anyway,
+        // <span class="java&#45;keyword">this</span> is especially important when a mutex has an indefinite lifespan (no timeout).
+        // Your application can obviously handle different exception cases here as well,
+        // but <span class="java&#45;keyword">this</span> example will not account <span class="java&#45;keyword">for</span> any exceptions thrown because of the simple
+        // logic <span class="java&#45;keyword">this</span> method performs.
+        <span class="java&#45;keyword">try</span> &#123;
+            <span class="java&#45;keyword">return</span> ++counter
+        &#125;
+        <span class="java&#45;keyword">finally</span> &#123;
+            distributedMutexHelper.releaseMutexLock(MUTEX_IDENTIFIER, key)
+        &#125;
+    &#125;
+&#125;</pre></div>
+
+
+
+                <div style="clear:both;margin-top:15px;"></div>
+                
+                    <div class="toc-item prev-left"><a href="../guide/introduction.html">&lt;&lt; <strong>1</strong><span>Introduction</span></a></div>
+                
+                    <div class="toc-item next-right"><a href="../guide/changelog.html"><strong>3</strong><span>Changelog</span> >></a></div>
+                
+                <div style="clear:both"></div>
+            </div>
+        </td>
+        <td id="col2">
+            <div class="local clearfix">
+                <div class="local-title">
+                    <a href="../guide/index.html" target="mainFrame">Quick Reference</a>
+                    <span class="toggle">(<a href="#" onclick="localToggle(); return false;">hide</a>)</span>
+                </div>
+                <div class="menu">
+                    
+                </div>
+            </div>
+        </td>
+    </tr>
+</table>
+
+<div id="footer">
+    
+    
+</div>
+
+<script type="text/javascript" src="../js/docs.js"></script>
+
+</body>
+</html>
