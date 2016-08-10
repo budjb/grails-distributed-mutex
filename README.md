@@ -2,4 +2,4 @@
 
 Distributed Mutex Plugin for Grails
 -----------------------------------
-See the documentation at http://budjb.github.io/grails-distributed-mutex/doc/manual/index.html.
+See the documentation at http://budjb.github.io/grails-distributed-mutex/3.x/latest.
