@@ -1,8 +1,7 @@
 language: java
 
 jdk:
-- oraclejdk7
+- oraclejdk8
 
 script:
-- ./grailsw refresh-dependencies --non-interactive
-- ./grailsw test-app -Dserver.port=8099 --refresh-dependencies --non-interactive --stacktrace
+./gradlew check

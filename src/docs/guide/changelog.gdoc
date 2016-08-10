@@ -1,3 +1,6 @@
+h3. Version 3.0.0
+* Migrate the plugin to Grails 3.x.
+
 h3. Version 1.0.1
 * Some cleanup items before plugin acceptance.
 * First public release.

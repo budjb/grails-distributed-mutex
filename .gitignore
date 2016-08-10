@@ -1,15 +1,24 @@
-.classpath
+# OSX files
 .DS_Store
-.idea
-.settings
-.project
+
+# IDEA project files
 *.iml
-*.iws
+.idea/
+out/
+
+# Eclipse project files
+.project
+.classpath
+.settings/
+
+# Grails 2.x files
+target/
+target-eclipse/
+*.zip
+*.war
 *.log
-/cobertura.ser
-/grails-distributed-mutex-*.zip
-/grails-distributed-mutex-*.zip.sha1
-/plugin.xml
-/target
-/target-eclipse
-/web-app
+
+# Grails 3.x files
+build/
+classes/
+.gradle/

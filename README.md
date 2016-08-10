@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/budjb/grails-distributed-mutex.svg?branch=master)](https://travis-ci.org/budjb/grails-distributed-mutex)
+[![Build Status](https://travis-ci.org/budjb/grails-distributed-mutex.svg?branch=grails-3.x)](https://travis-ci.org/budjb/grails-distributed-mutex)
 
 Distributed Mutex Plugin for Grails
 -----------------------------------
