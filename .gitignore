@@ -1,0 +1,8 @@
+build/
+.idea/
+grails-app/
+src/
+*gradle*
+.travis.yml
+LICENSE
+README.md
