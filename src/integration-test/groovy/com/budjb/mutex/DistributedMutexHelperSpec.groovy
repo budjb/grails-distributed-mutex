@@ -182,4 +182,12 @@ class DistributedMutexHelperSpec extends Specification {
         then:
         notThrown LockNotAcquiredException
     }
+
+    def 'If a mutex has never been used, then a lock check should be negative'() {
+        when:
+        boolean isLocked = distributedMutexHelper.isMutexLocked(MUTEX_IDENTIFIER_NAME)
+
+        then: 'No exceptions are thrown, and the mutex is not locked'
+        !isLocked
+    }
 }

@@ -47,7 +47,8 @@ class DistributedMutexHelper {
      */
     boolean isMutexLocked(String identifier) {
         DistributedMutex.withNewSession {
-            return isMutexLocked(DistributedMutex.findByIdentifier(identifier))
+            DistributedMutex dm = DistributedMutex.findByIdentifier(identifier)
+            return dm ? isMutexLocked(dm) : false
         }
     }
 
