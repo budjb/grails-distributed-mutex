@@ -45,6 +45,9 @@ class DistributedMutexHelperSpec extends Specification {
         mutex.locked
         mutex.expires == null
         mutex.key == key
+
+        cleanup:
+        distributedMutexHelper.releaseMutexLock(MUTEX_IDENTIFIER_NAME, key)
     }
 
     def 'Test acquiring a mutex with an identifier and a timeout'() {
@@ -64,6 +67,9 @@ class DistributedMutexHelperSpec extends Specification {
         mutex.locked
         mutex.expires != null
         mutex.key == key
+
+        cleanup:
+        distributedMutexHelper.releaseMutexLock(MUTEX_IDENTIFIER_NAME, key)
     }
 
     def 'Test acquiring a mutex with a poll timeout while another process has a lock'() {
@@ -75,25 +81,29 @@ class DistributedMutexHelperSpec extends Specification {
         distributedMutexHelper.log = log
 
         when:
-        boolean locked = distributedMutexHelper.acquireMutexLock(MUTEX_IDENTIFIER_NAME, 10000, 1000)
+        String key = distributedMutexHelper.acquireMutexLock(MUTEX_IDENTIFIER_NAME, 10000, 1000)
 
         then:
-        locked
+        notThrown LockNotAcquiredException
         1 * log.warn('mutex identified by \'{}\' is expired and has been reacquired by a new requester', 'foo-bar')
 
         cleanup:
         distributedMutexHelper.log = oldLog
+        distributedMutexHelper.releaseMutexLock(MUTEX_IDENTIFIER_NAME, key)
     }
 
     def 'If a mutex does not become available within the poll timeout period, the mutex is not acquired'() {
         setup:
-        distributedMutexHelper.acquireMutexLock(MUTEX_IDENTIFIER_NAME)
+        String key = distributedMutexHelper.acquireMutexLock(MUTEX_IDENTIFIER_NAME)
 
         when:
         distributedMutexHelper.acquireMutexLock(MUTEX_IDENTIFIER_NAME, 10000, 100)
 
         then:
         thrown LockNotAcquiredException
+
+        cleanup:
+        distributedMutexHelper.releaseMutexLock(MUTEX_IDENTIFIER_NAME, key)
     }
 
     def 'Test releasing a mutex lock'() {
@@ -113,7 +123,7 @@ class DistributedMutexHelperSpec extends Specification {
         Logger log = Mock(Logger)
         distributedMutexHelper.log = log
 
-        distributedMutexHelper.acquireMutexLock(MUTEX_IDENTIFIER_NAME)
+        String key = distributedMutexHelper.acquireMutexLock(MUTEX_IDENTIFIER_NAME)
 
         when:
         distributedMutexHelper.releaseMutexLock(MUTEX_IDENTIFIER_NAME, 'foobar')
@@ -122,6 +132,9 @@ class DistributedMutexHelperSpec extends Specification {
         then:
         distributedMutex.locked
         1 * log.warn('the key on mutex with identifier \'{}\' does not match the key provided with the request to unlock the mutex', 'foo-bar')
+
+        cleanup:
+        distributedMutexHelper.releaseMutexLock(MUTEX_IDENTIFIER_NAME, key)
     }
 
     def 'Test checking whether a mutex is locked'() {
@@ -160,6 +173,9 @@ class DistributedMutexHelperSpec extends Specification {
 
         then:
         distributedMutex.locked
+
+        cleanup:
+        distributedMutexHelper.releaseMutexLock(MUTEX_IDENTIFIER_NAME, key)
     }
 
     def 'When a mutex is locked, forcibly releasing it allows it to be reacquired'() {
@@ -177,9 +193,31 @@ class DistributedMutexHelperSpec extends Specification {
 
         when:
         distributedMutexHelper.forciblyReleaseMutex(MUTEX_IDENTIFIER_NAME)
-        distributedMutexHelper.acquireMutexLock(MUTEX_IDENTIFIER_NAME)
+        String key = distributedMutexHelper.acquireMutexLock(MUTEX_IDENTIFIER_NAME)
 
         then:
         notThrown LockNotAcquiredException
+
+        cleanup:
+        distributedMutexHelper.releaseMutexLock(MUTEX_IDENTIFIER_NAME, key)
+    }
+
+    // Testing that nested transactions are properly catered for
+    def 'Make sure that a mutex created within a transaction, is immediately visible in others'() {
+        setup:
+        String mutexIdName = 'NestedMutexTest'
+        String key = distributedMutexHelper.acquireMutexLock(mutexIdName)
+
+        when: 'another thread starts and attempts to acquire mutex, it should already be locked'
+        Boolean alreadyLocked = false
+        Thread.start {
+            alreadyLocked = distributedMutexHelper.isMutexLocked(mutexIdName)
+        }.join()
+
+        then:
+        alreadyLocked
+
+        cleanup:
+        distributedMutexHelper.releaseMutexLock(mutexIdName, key)
     }
 }
