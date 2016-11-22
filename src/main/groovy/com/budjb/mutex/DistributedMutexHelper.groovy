@@ -20,6 +20,7 @@ import org.hibernate.StaleObjectStateException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.dao.OptimisticLockingFailureException
+import org.springframework.transaction.TransactionDefinition
 
 class DistributedMutexHelper {
     /**
@@ -230,7 +231,10 @@ class DistributedMutexHelper {
         String suffix = ifNotExpired ? 'if the acquire timeout has not expired' : ''
         try {
             DistributedMutex.withNewSession {
-                DistributedMutex.withTransaction c
+                DistributedMutex.withTransaction(
+                    [propagationBehavior: TransactionDefinition.PROPAGATION_REQUIRES_NEW],
+                    c
+                )
             }
         }
         catch (OptimisticLockingFailureException ignored) {
